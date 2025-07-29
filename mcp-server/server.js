@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { spawn } from 'child_process'
+
 import { ConvexMCP } from './mcps/convex/index.js'
 import { MaterialUIMCP } from './mcps/material-ui/index.js'
 
@@ -12,7 +12,6 @@ app.use(express.json())
 
 // MCP instances and their processes
 const mcpInstances = new Map()
-const mcpProcesses = new Map()
 
 // Initialize MCP instances
 function initializeMCPs() {
@@ -25,41 +24,6 @@ function initializeMCPs() {
   mcpInstances.set('material-ui', materialUIMCP)
 
   console.log('✅ All MCP instances initialized')
-}
-
-// Setup MCP processes for each instance
-function setupMCPProcesses() {
-  for (const [name, mcpInstance] of mcpInstances) {
-    const mcpProcess = spawn(
-      'node',
-      [
-        '-e',
-        `
-      import('./mcps/${name}/index.js').then(module => {
-        const mcp = new module.${
-          name === 'convex' ? 'ConvexMCP' : 'MaterialUIMCP'
-        }();
-        // Process would run here, but we'll handle it directly
-      });
-    `,
-      ],
-      {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd(),
-      }
-    )
-
-    mcpProcess.stderr.on('data', (data) => {
-      console.log(`${name.toUpperCase()} MCP: ${data.toString().trim()}`)
-    })
-
-    mcpProcess.on('exit', (code) => {
-      console.error(`${name} MCP process exited with code ${code}`)
-      // Restart logic could go here
-    })
-
-    mcpProcesses.set(name, mcpProcess)
-  }
 }
 
 // Call MCP method directly
