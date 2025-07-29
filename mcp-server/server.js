@@ -1,63 +1,72 @@
-import express from 'express';
-import cors from 'cors';
-import { spawn } from 'child_process';
-import { ConvexMCP } from './mcps/convex/index.js';
-import { MaterialUIMCP } from './mcps/material-ui/index.js';
+import express from 'express'
+import cors from 'cors'
+import { spawn } from 'child_process'
+import { ConvexMCP } from './mcps/convex/index.js'
+import { MaterialUIMCP } from './mcps/material-ui/index.js'
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = express()
+const port = process.env.PORT || 3000
 
-app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
 // MCP instances and their processes
-const mcpInstances = new Map();
-const mcpProcesses = new Map();
+const mcpInstances = new Map()
+const mcpProcesses = new Map()
 
 // Initialize MCP instances
 function initializeMCPs() {
   // Convex MCP
-  const convexMCP = new ConvexMCP();
-  mcpInstances.set('convex', convexMCP);
-  
+  const convexMCP = new ConvexMCP()
+  mcpInstances.set('convex', convexMCP)
+
   // Material-UI MCP
-  const materialUIMCP = new MaterialUIMCP();
-  mcpInstances.set('material-ui', materialUIMCP);
-  
-  console.log('✅ All MCP instances initialized');
+  const materialUIMCP = new MaterialUIMCP()
+  mcpInstances.set('material-ui', materialUIMCP)
+
+  console.log('✅ All MCP instances initialized')
 }
 
 // Setup MCP processes for each instance
 function setupMCPProcesses() {
   for (const [name, mcpInstance] of mcpInstances) {
-    const mcpProcess = spawn('node', ['-e', `
+    const mcpProcess = spawn(
+      'node',
+      [
+        '-e',
+        `
       import('./mcps/${name}/index.js').then(module => {
-        const mcp = new module.${name === 'convex' ? 'ConvexMCP' : 'MaterialUIMCP'}();
+        const mcp = new module.${
+          name === 'convex' ? 'ConvexMCP' : 'MaterialUIMCP'
+        }();
         // Process would run here, but we'll handle it directly
       });
-    `], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      cwd: process.cwd()
-    });
+    `,
+      ],
+      {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: process.cwd(),
+      }
+    )
 
     mcpProcess.stderr.on('data', (data) => {
-      console.log(`${name.toUpperCase()} MCP: ${data.toString().trim()}`);
-    });
+      console.log(`${name.toUpperCase()} MCP: ${data.toString().trim()}`)
+    })
 
     mcpProcess.on('exit', (code) => {
-      console.error(`${name} MCP process exited with code ${code}`);
+      console.error(`${name} MCP process exited with code ${code}`)
       // Restart logic could go here
-    });
+    })
 
-    mcpProcesses.set(name, mcpProcess);
+    mcpProcesses.set(name, mcpProcess)
   }
 }
 
 // Call MCP method directly
 async function callMCP(mcpName, method, params = {}) {
-  const mcp = mcpInstances.get(mcpName);
+  const mcp = mcpInstances.get(mcpName)
   if (!mcp) {
-    throw new Error(`MCP '${mcpName}' not found`);
+    throw new Error(`MCP '${mcpName}' not found`)
   }
 
   // Simulate the JSON-RPC call by invoking the handler directly
@@ -66,58 +75,58 @@ async function callMCP(mcpName, method, params = {}) {
       case 'tools/list':
         return await mcp.server._requestHandlers.get('tools/list')({
           method: 'tools/list',
-          params: {}
-        });
+          params: {},
+        })
       case 'tools/call':
         return await mcp.server._requestHandlers.get('tools/call')({
           method: 'tools/call',
-          params
-        });
+          params,
+        })
       case 'resources/list':
         return await mcp.server._requestHandlers.get('resources/list')({
           method: 'resources/list',
-          params: {}
-        });
+          params: {},
+        })
       case 'resources/read':
         return await mcp.server._requestHandlers.get('resources/read')({
           method: 'resources/read',
-          params
-        });
+          params,
+        })
       case 'initialize':
         return {
           protocolVersion: '2024-11-05',
           capabilities: { tools: {}, resources: {} },
           serverInfo: {
             name: `${mcpName}-mcp-server`,
-            version: '1.0.0'
-          }
-        };
+            version: '1.0.0',
+          },
+        }
       case 'ping':
-        return { status: 'pong' };
+        return { status: 'pong' }
       case 'notifications/initialized':
-        return null;
+        return null
       default:
-        throw new Error(`Method ${method} not supported`);
+        throw new Error(`Method ${method} not supported`)
     }
   } catch (error) {
-    throw new Error(`Error calling ${method} on ${mcpName}: ${error.message}`);
+    throw new Error(`Error calling ${method} on ${mcpName}: ${error.message}`)
   }
 }
 
 // Setup routes for each MCP
 function setupMCPRoutes() {
-  const mcpNames = ['convex', 'material-ui'];
-  
-  mcpNames.forEach(mcpName => {
+  const mcpNames = ['convex', 'material-ui']
+
+  mcpNames.forEach((mcpName) => {
     // Health check
     app.get(`/${mcpName}/health`, (req, res) => {
       res.json({
         status: 'healthy',
         service: `${mcpName}-mcp`,
         timestamp: new Date().toISOString(),
-        mcp_process: mcpInstances.has(mcpName) ? 'running' : 'stopped'
-      });
-    });
+        mcp_process: mcpInstances.has(mcpName) ? 'running' : 'stopped',
+      })
+    })
 
     // MCP endpoint info (GET)
     app.get(`/${mcpName}`, (req, res) => {
@@ -126,174 +135,188 @@ function setupMCPRoutes() {
         protocol: 'JSON-RPC 2.0',
         version: '2024-11-05',
         server: `${mcpName}-mcp-server`,
-        methods: ['initialize', 'tools/list', 'tools/call', 'resources/list', 'resources/read', 'ping'],
+        methods: [
+          'initialize',
+          'tools/list',
+          'tools/call',
+          'resources/list',
+          'resources/read',
+          'ping',
+        ],
         usage: 'POST with JSON-RPC 2.0 payload',
         endpoints: {
           '/health': 'Health check',
           '/tools': 'List available tools (REST)',
           '/resources': 'List available resources (REST)',
-          '/': 'MCP JSON-RPC endpoint (POST)'
-        }
-      });
-    });
+          '/': 'MCP JSON-RPC endpoint (POST)',
+        },
+      })
+    })
 
     // MCP JSON-RPC endpoint (POST)
     app.post(`/${mcpName}`, async (req, res) => {
       try {
-        console.log(`🔍 ${mcpName.toUpperCase()} MCP Request:`, JSON.stringify(req.body, null, 2));
-        
-        const { jsonrpc, method, params, id } = req.body;
-        
+        console.log(
+          `🔍 ${mcpName.toUpperCase()} MCP Request:`,
+          JSON.stringify(req.body, null, 2)
+        )
+
+        const { jsonrpc, method, params, id } = req.body
+
         if (jsonrpc !== '2.0') {
           return res.status(400).json({
             jsonrpc: '2.0',
             error: { code: -32600, message: 'Invalid Request' },
-            id
-          });
+            id,
+          })
         }
 
-        const result = await callMCP(mcpName, method, params);
+        const result = await callMCP(mcpName, method, params)
 
         // For notifications, return 204 No Content
         if (method.startsWith('notifications/')) {
-          return res.status(204).send();
+          return res.status(204).send()
         }
 
         res.json({
           jsonrpc: '2.0',
           result,
-          id
-        });
+          id,
+        })
       } catch (error) {
-        console.error(`Error in ${mcpName} MCP:`, error.message);
+        console.error(`Error in ${mcpName} MCP:`, error.message)
         res.status(500).json({
           jsonrpc: '2.0',
           error: { code: -32603, message: error.message },
-          id: req.body?.id
-        });
+          id: req.body?.id,
+        })
       }
-    });
+    })
 
     // REST API endpoints for convenience
     app.get(`/${mcpName}/tools`, async (req, res) => {
       try {
-        const tools = await callMCP(mcpName, 'tools/list');
+        const tools = await callMCP(mcpName, 'tools/list')
         res.json({
           success: true,
           tools: tools.tools || [],
-          count: tools.tools?.length || 0
-        });
+          count: tools.tools?.length || 0,
+        })
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: error.message
-        });
+          error: error.message,
+        })
       }
-    });
+    })
 
     app.get(`/${mcpName}/resources`, async (req, res) => {
       try {
-        const resources = await callMCP(mcpName, 'resources/list');
+        const resources = await callMCP(mcpName, 'resources/list')
         res.json({
           success: true,
           resources: resources.resources || [],
-          count: resources.resources?.length || 0
-        });
+          count: resources.resources?.length || 0,
+        })
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: error.message
-        });
+          error: error.message,
+        })
       }
-    });
+    })
 
     // Tool execution
     app.post(`/${mcpName}/tools/:toolName`, async (req, res) => {
       try {
-        const { toolName } = req.params;
-        const args = req.body || {};
-        
+        const { toolName } = req.params
+        const args = req.body || {}
+
         const result = await callMCP(mcpName, 'tools/call', {
           name: toolName,
-          arguments: args
-        });
-        
+          arguments: args,
+        })
+
         res.json({
           success: true,
           tool: toolName,
-          result: result
-        });
+          result: result,
+        })
       } catch (error) {
         res.status(500).json({
           success: false,
           error: error.message,
-          tool: req.params.toolName
-        });
+          tool: req.params.toolName,
+        })
       }
-    });
+    })
 
     // Resource reading
     app.get(`/${mcpName}/resources/*`, async (req, res) => {
       try {
-        const resourceUri = req.url.replace(`/${mcpName}/resources/`, '');
-        const fullUri = resourceUri.startsWith(`${mcpName}://`) ? resourceUri : `${mcpName}://${resourceUri}`;
-        
+        const resourceUri = req.url.replace(`/${mcpName}/resources/`, '')
+        const fullUri = resourceUri.startsWith(`${mcpName}://`)
+          ? resourceUri
+          : `${mcpName}://${resourceUri}`
+
         const result = await callMCP(mcpName, 'resources/read', {
-          uri: fullUri
-        });
-        
+          uri: fullUri,
+        })
+
         res.json({
           success: true,
           uri: fullUri,
-          contents: result.contents || []
-        });
+          contents: result.contents || [],
+        })
       } catch (error) {
         res.status(500).json({
           success: false,
           error: error.message,
-          uri: req.url
-        });
+          uri: req.url,
+        })
       }
-    });
-  });
+    })
+  })
 
   // Special endpoints for Material-UI
   app.get('/material-ui/components', async (req, res) => {
     try {
       const result = await callMCP('material-ui', 'resources/read', {
-        uri: 'mui://components'
-      });
-      
+        uri: 'mui://components',
+      })
+
       res.json({
         success: true,
-        components: result.contents[0] ? JSON.parse(result.contents[0].text) : {}
-      });
+        components: result.contents[0]
+          ? JSON.parse(result.contents[0].text)
+          : {},
+      })
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error.message
-      });
+        error: error.message,
+      })
     }
-  });
+  })
 
   app.post('/material-ui/generate', async (req, res) => {
     try {
       const result = await callMCP('material-ui', 'tools/call', {
         name: 'generate_component',
-        arguments: req.body
-      });
-      
+        arguments: req.body,
+      })
+
       res.json({
         success: true,
-        generated: result
-      });
+        generated: result,
+      })
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error.message
-      });
+        error: error.message,
+      })
     }
-  });
+  })
 }
 
 // Main page
@@ -302,31 +325,19 @@ app.get('/', (req, res) => {
     service: 'MCP Pool Server',
     version: '2.0.0',
     description: 'Unified HTTP server for multiple MCPs',
-    available_mcps: {
-      '/convex': 'Convex database MCP - Tables, documents, queries',
-      '/material-ui': 'Material-UI React components MCP'
-    },
     endpoints: {
-      '/health': 'Overall system health',  
+      '/health': 'Overall system health',
       '/convex': 'Convex MCP endpoint (JSON-RPC)',
-      '/material-ui': 'Material-UI MCP endpoint (JSON-RPC)'
+      '/material-ui': 'Material-UI MCP endpoint (JSON-RPC)',
     },
-    mcp_over_http: {
-      convex: `http://${req.get('host')}/convex`,
-      'material-ui': `http://${req.get('host')}/material-ui`
-    },
-    claude_commands: {
-      convex: `claude mcp add --transport http convex http://${req.get('host')}/convex`,
-      'material-ui': `claude mcp add --transport http mui http://${req.get('host')}/material-ui`
-    }
-  });
-});
+  })
+})
 
 // System health
 app.get('/health', (req, res) => {
-  const mcpStatuses = {};
+  const mcpStatuses = {}
   for (const [name] of mcpInstances) {
-    mcpStatuses[`${name}-mcp`] = 'running';
+    mcpStatuses[`${name}-mcp`] = 'running'
   }
 
   res.json({
@@ -334,35 +345,35 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       'mcp-pool-server': 'running',
-      ...mcpStatuses
-    }
-  });
-});
+      ...mcpStatuses,
+    },
+  })
+})
 
 // Initialize and start server
 async function startServer() {
   try {
-    console.log('🚀 Initializing MCP Pool Server...');
-    
+    console.log('🚀 Initializing MCP Pool Server...')
+
     // Initialize all MCPs
-    initializeMCPs();
-    
+    initializeMCPs()
+
     // Setup routes
-    setupMCPRoutes();
-    
+    setupMCPRoutes()
+
     // Start HTTP server
     app.listen(port, '0.0.0.0', () => {
-      console.log(`🏊 MCP Pool Server running on port ${port}`);
-      console.log(`📋 Available MCPs: convex, material-ui`);
-      console.log(`🔗 Main endpoint: http://localhost:${port}`);
-      console.log(`🎯 Convex MCP: http://localhost:${port}/convex`);
-      console.log(`🎨 Material-UI MCP: http://localhost:${port}/material-ui`);
-    });
+      console.log(`🏊 MCP Pool Server running on port ${port}`)
+      console.log(`📋 Available MCPs: convex, material-ui`)
+      console.log(`🔗 Main endpoint: http://localhost:${port}`)
+      console.log(`🎯 Convex MCP: http://localhost:${port}/convex`)
+      console.log(`🎨 Material-UI MCP: http://localhost:${port}/material-ui`)
+    })
   } catch (error) {
-    console.error('❌ Failed to start MCP Pool Server:', error);
-    process.exit(1);
+    console.error('❌ Failed to start MCP Pool Server:', error)
+    process.exit(1)
   }
 }
 
 // Start the server
-startServer();
+startServer()
