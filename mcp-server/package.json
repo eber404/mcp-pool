@@ -1,0 +1,20 @@
+{
+  "name": "mcp-pool-server",
+  "version": "2.0.0",
+  "description": "Unified HTTP server for multiple MCP instances",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "@types/node": "^22.0.0",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "keywords": ["mcp", "server", "pool", "http", "unified"],
+  "author": "MCP Pool",
+  "license": "MIT"
+}

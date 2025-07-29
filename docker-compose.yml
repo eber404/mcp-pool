@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Unified MCP Pool Server
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: mcp-pool-server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - CONVEX_URL=${CONVEX_URL:-https://fearless-husky-961.convex.cloud}
+      - CONVEX_DEPLOY_KEY=${CONVEX_DEPLOY_KEY:-dev:fearless-husky-961}
+    volumes:
+      - ./mcp-server:/app
+    networks:
+      - mcp-pool-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mcp-pool-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mcp-server
+    networks:
+      - mcp-pool-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  mcp-pool-network:
+    driver: bridge
+    name: mcp-pool-network
