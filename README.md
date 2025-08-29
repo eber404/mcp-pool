@@ -49,10 +49,10 @@ Agora os endpoints são **mais limpos**:
 
 ```bash
 # Convex MCP (endpoint direto)
-claude mcp add --transport http convex http://minipc.local:8080/convex
+claude mcp add --transport http convex http://localhost:8080/convex
 
 # Material-UI MCP (endpoint direto)
-claude mcp add --transport http mui http://minipc.local:8080/material-ui
+claude mcp add --transport http mui http://localhost:8080/material-ui
 
 # Verificar conexões
 claude mcp list
