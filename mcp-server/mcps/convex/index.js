@@ -10,8 +10,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 // Configuração do Convex
-const CONVEX_URL = process.env.CONVEX_URL || 'https://fearless-husky-961.convex.cloud';
-const CONVEX_DEPLOY_KEY = process.env.CONVEX_DEPLOY_KEY || 'dev:fearless-husky-961';
+const CONVEX_URL = process.env.CONVEX_URL;
+const CONVEX_DEPLOY_KEY = process.env.CONVEX_DEPLOY_KEY;
 
 export class ConvexMCP {
   constructor() {
