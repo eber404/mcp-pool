@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-
-// Configuração do Convex
-const CONVEX_URL = process.env.CONVEX_URL;
-const CONVEX_DEPLOY_KEY = process.env.CONVEX_DEPLOY_KEY;
 
 export class ConvexMCP {
   constructor() {
@@ -32,7 +27,7 @@ export class ConvexMCP {
   }
 
   setupHandlers() {
-    // Lista de ferramentas disponíveis
+    // List of available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
@@ -139,7 +134,7 @@ export class ConvexMCP {
       };
     });
 
-    // Lista de recursos disponíveis
+    // List of available resources
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       return {
         resources: [
@@ -165,7 +160,7 @@ export class ConvexMCP {
       };
     });
 
-    // Leitura de recursos
+    // Resource reading
     this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       const { uri } = request.params;
 
@@ -234,7 +229,7 @@ export class ConvexMCP {
       }
     });
 
-    // Execução de ferramentas
+    // Tool execution
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
 
@@ -313,7 +308,7 @@ export class ConvexMCP {
   async queryDocuments(args) {
     const { table, filter, limit = 10 } = args;
     
-    // Mock data baseado na tabela
+    // Mock data based on table
     const mockData = {
       users: [
         { _id: 'user_1', name: 'John Doe', email: 'john@example.com', createdAt: '2024-01-01T00:00:00Z' },

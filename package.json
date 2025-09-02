@@ -2,11 +2,11 @@
   "name": "mcp-pool-server",
   "version": "2.0.0",
   "description": "Unified HTTP server for multiple MCP instances",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",

@@ -15,7 +15,7 @@ RUN npm ci --omit=dev
 COPY . .
 
 # Make server executable
-RUN chmod +x server.js
+RUN chmod +x src/server.js
 
 # Expose port
 EXPOSE 3000

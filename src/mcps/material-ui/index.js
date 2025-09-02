@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -9,7 +8,7 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-// Configuração dos componentes Material-UI
+// Material-UI components configuration
 const MUI_COMPONENTS = {
   Button: {
     description: 'Interactive button component with various styles and states',
@@ -112,7 +111,7 @@ export class MaterialUIMCP {
   }
 
   setupHandlers() {
-    // Lista de ferramentas disponíveis
+    // List of available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
@@ -239,7 +238,7 @@ export class MaterialUIMCP {
       };
     });
 
-    // Lista de recursos disponíveis
+    // List of available resources
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       return {
         resources: [
@@ -271,7 +270,7 @@ export class MaterialUIMCP {
       };
     });
 
-    // Leitura de recursos
+    // Resource reading
     this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       const { uri } = request.params;
 
@@ -422,7 +421,7 @@ Your Material-UI setup is complete. Start building beautiful React components!
       }
     });
 
-    // Execução de ferramentas
+    // Tool execution
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
 

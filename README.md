@@ -1,95 +1,95 @@
-# 🏊 MCP Pool - Servidor HTTP Unificado para MCPs
+# 🏊 MCP Pool - Unified HTTP Server for MCPs
 
-Sistema unificado que permite **hospedar múltiplos MCPs via HTTP**
+Unified system that allows **hosting multiple MCPs via HTTP**
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
-**Servidor Unificado:**
+**Unified Server:**
 
-- **1 Container** apenas (mcp-pool-server)
-- **MCPs organizados** por pastas em `/mcps/`
-- **Endpoints limpos** - `/convex` e `/material-ui`
-- **Fácil escalabilidade** para adicionar novos MCPs
+- **Only 1 Container** (mcp-pool-server)
+- **MCPs organized** in folders under `src/mcps/`
+- **Clean endpoints** - `/convex` and `/material-ui`
+- **Easy scalability** to add new MCPs
 
-## 📁 Estrutura do Projeto
+## 📁 Project Structure
 
 ```
 mcp-pool/
-├── mcp-server/                  # Servidor HTTP unificado
-│   ├── mcps/                    # MCPs organizados por pasta
+├── src/                         # Server source code
+│   ├── mcps/                    # MCPs organized by folder
 │   │   ├── convex/
 │   │   │   └── index.js         # Convex MCP Core
 │   │   └── material-ui/
 │   │       └── index.js         # Material-UI MCP Core
-│   ├── server.js                # Servidor HTTP principal
-│   ├── Dockerfile
-│   └── package.json
-├── nginx/
-│   └── nginx.conf               # Proxy configuration
-├── docker-compose.yml           # Orchestração simplificada
-├── .env                         # Configurações
+│   └── server.js                # Main HTTP server
+├── Dockerfile                   # Unified Dockerfile
+├── docker-compose.yml           # Simplified orchestration
+├── nginx.conf                   # Reverse proxy configuration
+├── package.json                 # Project dependencies
+├── .env                         # Configuration settings
+├── .env.example                 # Configuration example
 └── README.md
 ```
 
-## 🚀 Setup Rápido
+## 🚀 Quick Setup
 
-### 1. Subir o Servidor
+### 1. Start the Server
 
 ```bash
-# Construir e iniciar todos os serviços
+# Build and start all services
 docker compose up -d --build
 
-# Verificar status
+# Check status
 docker compose ps
 ```
 
-### 2. Conectar Claude Code via HTTP
+### 2. Connect Claude Code via HTTP
 
-Agora os endpoints são **mais limpos**:
+Now the endpoints are **cleaner**:
 
 ```bash
-# Convex MCP (endpoint direto)
-claude mcp add --transport http convex http://localhost:8080/convex
+# Convex MCP (direct endpoint)
+claude mcp add --transport http convex http://localhost:3000/convex
 
-# Material-UI MCP (endpoint direto)
-claude mcp add --transport http mui http://localhost:8080/material-ui
+# Material-UI MCP (direct endpoint)
+claude mcp add --transport http mui http://localhost:3000/material-ui
 
-# Verificar conexões
+# Check connections
 claude mcp list
 ```
 
-### 3. Acessar MCPs via HTTP
+### 3. Access MCPs via HTTP
 
-O servidor estará disponível em `http://localhost:8080`:
-
-```bash
-# Página principal - lista MCPs disponíveis
-curl http://localhost:8080/
-
-# Health check do sistema
-curl http://localhost:8080/health
-
-# Convex MCP (endpoint limpo)
-curl http://localhost:8080/convex
-curl http://localhost:8080/convex/tools
-
-# Material-UI MCP (endpoint limpo)
-curl http://localhost:8080/material-ui
-curl http://localhost:8080/material-ui/components
-```
-
-## ➕ Adicionar Novo MCP
-
-### Passo a Passo Simplificado:
-
-1. **Criar pasta do MCP:**
+The server will be available at `http://localhost:3000`:
 
 ```bash
-mkdir mcp-pool/mcp-server/mcps/meu-novo-mcp
-cd mcp-pool/mcp-server/mcps/meu-novo-mcp
+# Main page - list available MCPs
+curl http://localhost:3000/
+
+# System health check
+curl http://localhost:3000/health
+
+# Convex MCP (clean endpoint)
+curl http://localhost:3000/convex
+curl http://localhost:3000/convex/tools
+
+# Material-UI MCP (clean endpoint)
+curl http://localhost:3000/material-ui
+curl http://localhost:3000/material-ui/components
 ```
 
-2. **Criar index.js** (MCP Core):
+## ➕ Add New MCP
+
+### Simplified Step-by-Step:
+
+1. **Create MCP folder:**
+
+```bash
+mkdir mcp-pool/src/mcps/my-new-mcp
+cd mcp-pool/src/mcps/my-new-mcp
+```
+
+2. **Create index.js** (MCP Core):
 
 ```javascript
 #!/usr/bin/env node
@@ -103,11 +103,11 @@ import {
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
 
-export class MeuNovoMCP {
+export class MyNewMCP {
   constructor() {
     this.server = new Server(
       {
-        name: 'meu-novo-mcp-server',
+        name: 'my-new-mcp-server',
         version: '1.0.0',
       },
       {
@@ -118,73 +118,72 @@ export class MeuNovoMCP {
   }
 
   setupHandlers() {
-    // Definir ferramentas disponíveis
+    // Define available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: [
         {
-          name: 'minha_ferramenta',
-          description: 'Descrição da ferramenta',
+          name: 'my_tool',
+          description: 'Tool description',
           inputSchema: {
             type: 'object',
             properties: {
-              parametro: {
+              parameter: {
                 type: 'string',
-                description: 'Descrição do parâmetro',
+                description: 'Parameter description',
               },
             },
-            required: ['parametro'],
+            required: ['parameter'],
           },
         },
       ],
     }))
 
-    // Implementar outras handlers...
+    // Implement other handlers...
   }
 
-  // Implementar métodos das ferramentas...
+  // Implement tool methods...
 }
 ```
 
-3. **Registrar no servidor principal** (server.js):
+3. **Register in main server** (src/server.js):
 
 ```javascript
-import { MeuNovoMCP } from './mcps/meu-novo-mcp/index.js'
+import { MyNewMCP } from './mcps/my-new-mcp/index.js'
 
-// Adicionar na função initializeMCPs()
-const meuNovoMCP = new MeuNovoMCP()
-mcpInstances.set('meu-novo-mcp', meuNovoMCP)
+// Add in initializeMCPs() function
+const myNewMCP = new MyNewMCP()
+mcpInstances.set('my-new-mcp', myNewMCP)
 
-// Adicionar no array mcpNames
-const mcpNames = ['convex', 'material-ui', 'meu-novo-mcp']
+// Add to mcpNames array
+const mcpNames = ['convex', 'material-ui', 'my-new-mcp']
 ```
 
-4. **Rebuild e testar:**
+4. **Rebuild and test:**
 
 ```bash
 docker compose up -d --build
-curl http://localhost:8080/meu-novo-mcp/health
-claude mcp add --transport http meu-novo http://localhost:8080/meu-novo-mcp
+curl http://localhost:3000/my-new-mcp/health
+claude mcp add --transport http my-new http://localhost:3000/my-new-mcp
 ```
 
-## 🔧 Operações Comuns
+## 🔧 Common Operations
 
 ```bash
-# Ver logs em tempo real
+# View logs in real time
 docker compose logs -f
 
-# Restart do servidor unificado
-docker compose restart mcp-server
+# Restart unified server
+docker compose restart mcp-pool-server
 
-# Ver status detalhado
+# View detailed status
 docker compose ps
 
-# Rebuild após mudanças
+# Rebuild after changes
 docker compose up -d --build
 
-# Parar tudo
+# Stop everything
 docker compose down
 
-# Ver logs de erro
-docker compose logs nginx
-docker compose logs mcp-server
+# View server logs
+docker compose logs mcp-pool-server
 ```
